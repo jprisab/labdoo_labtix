@@ -1,14 +1,13 @@
 #!/bin/bash
 #Script for copying local files to labdoo
-#Version 0.52 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany))  01/02/2019
-#Added SW tab inclussion in the Web Browser start if SW is selected as content language
-#Bug corrections
-#ZH content was being searched in the wrong folder
-#SW and AR content mixed
-
-#Version 0.51 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany))  30/08/2018
-#Bug corrections
-#Correcttion in the addition of SW 
+#Version 0.62 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany))  30/10/2019
+#Correct problems reported by Ali with the AR content
+#Addition of MY / HU / ZU / SR / UK - > CURRENT SUPPORTED LANGUAGES: [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA / MY / HU / ZU / SR / UK]
+# Check that root is running the script, small corections in FR content, reintroduction of the funciton in the end to set the proper permissions
+#Version 0.60 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany))  30/08/2018
+#Added new size for increased KAOS in ES,FR,PT
+#Added KAOS for SW
+#Correcttion in the addition of SW
 #Addition of AR,HI,DE  FR / NE / ID / PT / ZH / RU / RO / IT / FA - > CURRENT SUPPORTED LANGUAGES: [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA]
 #Addition of recursive directory creation on restore of web contetn
 
@@ -35,8 +34,8 @@ MB_TO_BE_LEFT=""
 
 #ALL THE PARAMETERS ARE RELEVANT
 #1 PRiority of installation
-#2 How i look for it when removing it from the HTML file
-#3 Where should the script look for it
+#2 How i look for it when removing it from the HTML file - some text in the line in the index-<lang>.html to find and remove it in case not installed 
+#3 Where should the script look for it to see if already installed
 #4 Where is it located
 #5 Size when uncompressed
 
@@ -72,7 +71,7 @@ HD_AVAILABLE_CONTENT_EN=(
 	"25,en-tanzanian_exams,wikis/EN/en-tanzanian_exams,wiki-archive/wikis/EN/en-tanzanian_exams.tar.gz,43"
 	"26,en-boks-videos,wikis/EN/en-boks-videos,wiki-archive/wikis/EN/en-boks-videos.tar.gz,5500"
 	#Wikipedia for schools is included in RACHEL Therefore included with huge size so that it is NEVER installed
-        "27,wikipedia_for_schools-en,wikis/EN/wikipedia_for_schools-en,wiki-archive/wikis/EN/en-wikipedia_for_schools.tar.gz,6400000000"
+        #"27,wikipedia_for_schools-en,wikis/EN/wikipedia_for_schools-en,wiki-archive/wikis/EN/en-wikipedia_for_schools.tar.gz,6400000000"
 	
         
 
@@ -84,9 +83,9 @@ HD_AVAILABLE_CONTENT_EN=(
 
 HD_AVAILABLE_CONTENT_ES=(
 
-	"1,RACHEL-ES,wikis/ES/RACHEL-ES,wiki-archive/wikis/ES/es-rachel.tar.gz,15000"
+	"1,RACHEL-ES,wikis/ES/RACHEL-ES,wiki-archive/wikis/ES/es-rachel.tar.gz,31000"
 	#Wikipedia for schools is included in RACHEL Therefore included with huge size so that it is NEVER installed     
-       "31,wikipedia_for_schools-es,wikis/ES/es-wikipedia_for_schools,wiki-archive/wikis/ES/es-wikipedia_for_schools.tar.gz,640000000"
+       	#"31,wikipedia_for_schools-es,wikis/ES/es-wikipedia_for_schools,wiki-archive/wikis/ES/es-wikipedia_for_schools.tar.gz,640000000"
 	"2,es.wikibooks.org,xowa/wiki/es.wikibooks.org,wiki-archive/xowa-wikis/es.wikibooks.org,47"
 	"3,es.wikinews.org,xowa/wiki/es.wikinews.org,wiki-archive/xowa-wikis/es.wikinews.org,62"
 	"4,es.wikipedia.org,xowa/wiki/es.wikipedia.org,wiki-archive/xowa-wikis/es.wikipedia.org,6600"
@@ -95,24 +94,27 @@ HD_AVAILABLE_CONTENT_ES=(
 	"7,es.wikiversity.org,xowa/wiki/es.wikiversity.org,wiki-archive/xowa-wikis/es.wikiversity.org,12"
 	"8,es.wikivoyage.org,xowa/wiki/es.wikivoyage.org,wiki-archive/xowa-wikis/es.wikivoyage.org,15"	
 	"9,es.wiktionary.org,xowa/wiki/es.wiktionary.org,wiki-archive/xowa-wikis/es.wiktionary.org,670"
-
+	#Wikis
 	"10,es-biblioteca,wikis/ES/es-biblioteca,wiki-archive/wikis/ES/es-biblioteca.tar.gz,7800"
 	"11,es-educalab,wikis/ES/es-educalab,wiki-archive/wikis/ES/es-educalab.tar.gz,836"
 	"12,es-cnbguatemala,wikis/ES/es-cnbguatemala,wiki-archive/wikis/ES/es-cnbguatemala.tar.gz,480"
 	"13,es-mustardseedbooks,wikis/ES/es-mustardseedbooks,wiki-archive/wikis/ES/es-mustardseedbooks.tar.gz,37"
 	"14,es-boks-videos,wikis/ES/es-boks-videos,wiki-archive/wikis/ES/es-boks-videos.tar.gz,5400"
+	"15,es-tocomadera,wikis/ES/es-tocomadera,wiki-archive/wikis/ES/es-tocomadera.tar.gz,24"
+	"16,es-GCF2015,wikis/ES/es-GCF2015,wiki-archive/wikis/ES/es-GCF2015.tar.gz,3200"
 )
 
 
 HD_AVAILABLE_CONTENT_SW=(
 
 
-
+	#XOWA
 	"1,sw.wikibooks.org,xowa/wiki/sw.wikibooks.org,wiki-archive/xowa-wikis/sw.wikibooks.org,1"
 	"2,sw.wikipedia.org,xowa/wiki/sw.wikipedia.org,wiki-archive/xowa-wikis/sw.wikipedia.org,74"
 	"3,sw.wiktionary.org,xowa/wiki/sw.wiktionary.org,wiki-archive/xowa-wikis/sw.wiktionary.org,7"
-
-	"4,sw-boks-videos,wikis/SW/sw-boks-videos,wiki-archive/wikis/SW/sw-boks-videos.tar.gz,6000"
+	#Contents
+	"4,BOKS_videos_SW,wikis/SW/BOKS_videos_SW,wiki-archive/wikis/SW/sw-boks-videos.tar.gz,6000"
+	"5,sw-kaos,wikis/SW/sw-kaos,wiki-archive/wikis/SW/sw-kaos.tar.gz,3300"
 )
 
 HD_AVAILABLE_CONTENT_AR=(
@@ -185,11 +187,10 @@ HD_AVAILABLE_CONTENT_FR=(
 	"10,fr.wiktionary.org,xowa/wiki/fr.wiktionary.org,wiki-archive/xowa-wikis/fr.wiktionary.org,2900"
 
 	"1,wikipedia_for_schools-fr,wikis/FR/wikipedia_for_schools-fr,wiki-archive/wikis/FR/fr-wikipedia_for_schools.tar.gz,6200"
-	"2,fr-afrique-marie-wabbes,wikis/FR/fr-afrique-marie-wabbes,wiki-archive/wikis/DE/fr-afrique-marie-wabbes.tar.gz,62"
+	"2,fr-afrique-marie-wabbes,wikis/FR/fr-afrique-marie-wabbes,wiki-archive/wikis/FR/fr-afrique-marie-wabbes.tar.gz,62"
 	"11,fr-catdogbooks,wikis/FR/fr-catdogbooks,wiki-archive/wikis/FR/fr-catdogbooks.tar.gz,200"
-	"12,fr-haitifutur,wikis/FR/fr-haitifutur,wiki-archive/wikis/DE/fr-haitifutur.tar.gz,2100"
-	"13,fr-kaos,wikis/FR/fr-kaos,wiki-archive/wikis/FR/fr-kaos.tar.gz,5500"
-
+	"12,fr-haitifutur,wikis/FR/fr-haitifutur,wiki-archive/wikis/FR/fr-haitifutur.tar.gz,2100"
+	"13,fr-kaos,wikis/FR/fr-kaos,wiki-archive/wikis/FR/fr-kaos.tar.gz,15000"
 )
 
 
@@ -201,7 +202,7 @@ HD_AVAILABLE_CONTENT_NE=(
 	"5,ne.wikipedia.org,xowa/wiki/ne.wikipedia.org,wiki-archive/xowa-wikis/ne.wikipedia.org,87"
 	"10,ne.wiktionary.org,xowa/wiki/ne.wiktionary.org,wiki-archive/xowa-wikis/ne.wiktionary.org,8"
 
-	"1,en-ole_nepal,wikis/ID/en-ole_nepal,wiki-archive/wikis/ID/en-ole_nepal.tar.gz,6000"
+	"1,DoNotConsiDeR,wikis/NE/en-ole_nepal,wiki-archive/wikis/NE/en-ole_nepal.tar.gz,6000"
 	
 
 )
@@ -237,7 +238,7 @@ HD_AVAILABLE_CONTENT_PT=(
 	"10,pt.wiktionary.org,xowa/wiki/pt.wiktionary.org,wiki-archive/xowa-wikis/pt.wiktionary.org,229"
 
 	"1,wikipedia_for_schools-pt,wikis/PT/wikipedia_for_schools-pt,wiki-archive/wikis/PT/pt-wikipedia_for_schools.tar.gz,6100"
-	"2,pt-kaos,wikis/PT/pt-kaos,wiki-archive/wikis/PT/pt-kaos.tar.gz,8300"
+	"2,pt-kaos,wikis/PT/pt-kaos,wiki-archive/wikis/PT/pt-kaos.tar.gz,22000"
 
 )
 
@@ -301,27 +302,99 @@ HD_AVAILABLE_CONTENT_FA=(
 
 )
 
-while getopts l:s:d:f: option
-    do
-    case "${option}"
-    in
-        l) LANG_CONTENT=${OPTARG};;
-        s) SOURCE_DIR=${OPTARG};;
-        d) DEST_DIR=${OPTARG};;
-        f) MB_TO_BE_LEFT=$OPTARG;;
-    esac
-    done
+HD_AVAILABLE_CONTENT_MY=(
 
 
-if [ -z  "$LANG_CONTENT" ] || [ -z "$DEST_DIR" ] || [ -z  "$MB_TO_BE_LEFT" ] || [ -z  "$DEST_DIR" ] || [ ! -d  "$DEST_DIR" ] || [ ! -d  "$SOURCE_DIR" ];
+	#XOWA
+	"1,my.wikibooks.org,xowa/wiki/my.wikibooks.org,wiki-archive/xowa-wikis/my.wikibooks.org,1"
+	"2,my.wikipedia.org,xowa/wiki/my.wikipedia.org,wiki-archive/xowa-wikis/my.wikipedia.org,120"
+	"3,my.wiktionary.org,xowa/wiki/my.wiktionary.org,wiki-archive/xowa-wikis/my.wiktionary.org,74"
+
+)
+
+HD_AVAILABLE_CONTENT_HU=(
+
+	"3,hu.wikibooks.org,xowa/wiki/hu.wikibooks.org,wiki-archive/xowa-wikis/hu.wikibooks.org,87"
+	"4,hu.wikinews.org,xowa/wiki/hu.wikinews.org,wiki-archive/xowa-wikis/hu.wikinews.org,6"
+	"5,hu.wikipedia.org,xowa/wiki/hu.wikipedia.org,wiki-archive/xowa-wikis/hu.wikipedia.org,1900"
+	"6,hu.wikiquote.org,xowa/wiki/hu.wikiquote.org,wiki-archive/xowa-wikis/hu.wikiquote.org,7"
+	"7,hu.wikisource.org,xowa/wiki/hu.wikisource.org,wiki-archive/xowa-wikis/hu.wikisource.org,62"	
+	"10,hu.wiktionary.org,xowa/wiki/hu.wiktionary.org,wiki-archive/xowa-wikis/hu.wiktionary.org,224"
+
+)
+
+HD_AVAILABLE_CONTENT_ZU=(
+
+
+	#XOWA
+	"1,zu.wikibooks.org,xowa/wiki/zu.wikibooks.org,wiki-archive/xowa-wikis/zu.wikibooks.org,1"
+	"2,zu.wikipedia.org,xowa/wiki/zu.wikipedia.org,wiki-archive/xowa-wikis/zu.wikipedia.org,3"
+	"3,zu.wiktionary.org,xowa/wiki/zu.wiktionary.org,wiki-archive/xowa-wikis/zu.wiktionary.org,1"
+
+)
+
+
+HD_AVAILABLE_CONTENT_SR=(
+
+	"3,sr.wikibooks.org,xowa/wiki/sr.wikibooks.org,wiki-archive/xowa-wikis/sr.wikibooks.org,7"
+	"4,sr.wikinews.org,xowa/wiki/sr.wikinews.org,wiki-archive/xowa-wikis/sr.wikinews.org,225"
+	"5,sr.wikipedia.org,xowa/wiki/sr.wikipedia.org,wiki-archive/xowa-wikis/sr.wikipedia.org,3800"
+	"6,sr.wikiquote.org,xowa/wiki/sr.wikiquote.org,wiki-archive/xowa-wikis/sr.wikiquote.org,3"
+	"7,sr.wikisource.org,xowa/wiki/sr.wikisource.org,wiki-archive/xowa-wikis/sr.wikisource.org,70"	
+	"10,sr.wiktionary.org,xowa/wiki/sr.wiktionary.org,wiki-archive/xowa-wikis/sr.wiktionary.org,275"
+
+)
+
+
+
+HD_AVAILABLE_CONTENT_UK=(
+
+	"3,uk.wikibooks.org,xowa/wiki/uk.wikibooks.org,wiki-archive/xowa-wikis/uk.wikibooks.org,5"
+	"4,uk.wikinews.org,xowa/wiki/uk.wikinews.org,wiki-archive/xowa-wikis/uk.wikinews.org,10"
+	"5,uk.wikipedia.org,xowa/wiki/uk.wikipedia.org,wiki-archive/xowa-wikis/uk.wikipedia.org,3800"
+	"6,uk.wikiquote.org,xowa/wiki/uk.wikiquote.org,wiki-archive/xowa-wikis/uk.wikiquote.org,26"
+	"7,uk.wikisource.org,xowa/wiki/uk.wikisource.org,wiki-archive/xowa-wikis/uk.wikisource.org,86"
+	"9,uk.wikivoyage.org,xowa/wiki/uk.wikivoyage.org,wiki-archive/xowa-wikis/uk.wikivoyage.org,5"	
+	"10,uk.wiktionary.org,xowa/wiki/uk.wiktionary.org,wiki-archive/xowa-wikis/uk.wiktionary.org,51"
+
+)
+
+
+
+
+
+#CHECK THAT THE SCRIPT IS RUN AS ROOT
+if [ "$EUID" -ne 0 ]
+  then
+        echo "Please run as root, otherwise you might have some problems"
+        printf "Invoke as:
+	${red_colour}sudo ${end_colour} bash install_contents.sh -l <language> -s <source contents> -d <destination contetns> -f <MBs to be left free during restoration> \n"
+  exit
+fi
+
+
+#CHECK PROVIDER PARAMETERS
+    while getopts l:s:d:f: option
+        do
+            case "${option}"
+                in
+                l) LANG_CONTENT=${OPTARG};;
+                s) SOURCE_DIR=${OPTARG};;
+                d) DEST_DIR=${OPTARG};;
+                f) MB_TO_BE_LEFT=$OPTARG;;
+            esac
+     done
+
+
+    if [ -z  "$LANG_CONTENT" ] || [ -z "$DEST_DIR" ] || [ -z  "$MB_TO_BE_LEFT" ] || [ -z  "$DEST_DIR" ] || [ ! -d  "$DEST_DIR" ] || [ ! -d  "$SOURCE_DIR" ];
         then
         printf "${red_colour}\nERROR!!!!!!!!!!!!! \n ADDITIONAL LABDOO CONTENT INSTALLER Called with wrong paramters, please use: ${end_colour}\n\n" 
         printf "sudo bash install_contents.sh -l <language> -s <source contents> -d <destination contetns> -f <MBs to be left free during restoration> \n" 
-        printf "${yellow_colour}language ${end_colour}shoud be one of [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA] \n" 
+        printf "${yellow_colour}language ${end_colour}shoud be one of [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA / MY / HU / ZU / SR / UK ] \n" 
         printf "${yellow_colour}source contents${end_colour} should be  shoud be one something similar to [/media/labdoo/233DBC957DA13B4D] and has to be an existing directory\n" 
         printf "${yellow_colour}destination ${end_colour}needs to be one either  [/home/labdoo/Public] or [/mnt/home/labdoo/Public] and has to be an existing directory\n" 
         printf "${yellow_colour}MBs to be left free...${end_colour}well it should be an integer - but big enough, take into account that lubuntu 18 needs place to grow the swap, and the user will need place to store his files \n" 
-        printf "${red_colour}\nP....breaking.... ${end_colour}\n\n" 
+        printf "${red_colour}\n....breaking.... ${end_colour}\n\n" 
         exit 1
     fi
 
@@ -334,9 +407,8 @@ if [ -z  "$LANG_CONTENT" ] || [ -z "$DEST_DIR" ] || [ -z  "$MB_TO_BE_LEFT" ] || 
 
 
 
-#-------------------------
 
-
+#READ THE PRECONFIGURED AVAILABLE CONTENT DEPENDING ON THE LANGUAGE
 HD_AVAILABLE_CONTENT=()
 if [ $LANG_CONTENT == "EN" ];
     then
@@ -428,66 +500,48 @@ elif [ $LANG_CONTENT == "FA" ];
         do
 	    HD_AVAILABLE_CONTENT+=("$line")    
     done
+elif [ $LANG_CONTENT == "MY" ];
+    then
+    for line in "${HD_AVAILABLE_CONTENT_MY[@]}"
+        do
+	    HD_AVAILABLE_CONTENT+=("$line")    
+    done
+elif [ $LANG_CONTENT == "HU" ];
+    then
+    for line in "${HD_AVAILABLE_CONTENT_HU[@]}"
+        do
+	    HD_AVAILABLE_CONTENT+=("$line")    
+    done
+elif [ $LANG_CONTENT == "ZU" ];
+    then
+    for line in "${HD_AVAILABLE_CONTENT_ZU[@]}"
+        do
+	    HD_AVAILABLE_CONTENT+=("$line")    
+    done
+elif [ $LANG_CONTENT == "SR" ];
+    then
+    for line in "${HD_AVAILABLE_CONTENT_SR[@]}"
+        do
+	    HD_AVAILABLE_CONTENT+=("$line")    
+    done
+elif [ $LANG_CONTENT == "UK" ];
+    then
+    for line in "${HD_AVAILABLE_CONTENT_UK[@]}"
+        do
+	    HD_AVAILABLE_CONTENT+=("$line")    
+    done
 else
-    printf "${red_colour}\nSelected language $LANG_CONTENT is invalid or not configured right now only [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA ] are supported values....breaking.... ${end_colour}\n\n" 
+    printf "${red_colour}\nSelected language $LANG_CONTENT is invalid or not configured right now only [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA / MY / HU / ZU / SR /UK ] are supported values....breaking.... ${end_colour}\n\n" 
     exit 1
 fi
 
-add_firefox_startTAB_labdoo_student(){
-    FINAL_HTML_FILE=$1
-    
-    ## ADD HARCODED indexhtml for some languages
-
-    printf "ADDING Firefox default tab   ${red_colour} $FINAL_HTML_FILE  ${end_colour} \n"
-
-
-## For Labdoo / get the name of the Firefox confi file
-    FILENAME=$(find $DEST_DIR/.. -name prefs.js | grep firefox)
-    TEMP_FILENAME=$FILENAME"_TEMP"
-    STARTUP_TABS_PROP_LINE=$(grep "browser.startup.homepage\"" $FILENAME)
-    #Remove the line from the file
-    grep -v "browser.startup.homepage\"" $FILENAME > $TEMP_FILENAME
-    mv $TEMP_FILENAME $FILENAME
-    #Add the tab to the startup properties line
-    NEW_STARTUP_TABS_PROP_LINE=${STARTUP_TABS_PROP_LINE::-3}
-    NEW_STARTUP_TABS_PROP_LINE+="|"
-    NEW_STARTUP_TABS_PROP_LINE=$NEW_STARTUP_TABS_PROP_LINE$FINAL_HTML_FILE
-    NEW_STARTUP_TABS_PROP_LINE+="\");"
-    #Add the modified line to the config gifile
-    echo $NEW_STARTUP_TABS_PROP_LINE >> $FILENAME
-
-# For Student user / get the name of the Firefox confi file
-    FILENAME=$(sudo find $DEST_DIR/../../student -name prefs.js | grep firefox)
-    TEMP_FILENAME=$FILENAME"_TEMP"
-    STARTUP_TABS_PROP_LINE=$(sudo grep "browser.startup.homepage\"" $FILENAME)
-    if [ -z "$STARTUP_TABS_PROP_LINE" ];
-        then
-        sudo echo "user_pref(\"browser.startup.homepage\", \"about:newtab\");" >> $FILENAME
-        STARTUP_TABS_PROP_LINE="user_pref(\"browser.startup.homepage\", \"about:newtab\");"
-    else
-        #Remove the line from the file
-        sudo grep -v "browser.startup.homepage\"" $FILENAME > $TEMP_FILENAME
-        sudo mv -f $TEMP_FILENAME $FILENAME
-    fi
-    #Add the tab to the startup properties line
-    NEW_STARTUP_TABS_PROP_LINE=${STARTUP_TABS_PROP_LINE::-3}
-    NEW_STARTUP_TABS_PROP_LINE+="|"
-    NEW_STARTUP_TABS_PROP_LINE=$NEW_STARTUP_TABS_PROP_LINE$FINAL_HTML_FILE
-    NEW_STARTUP_TABS_PROP_LINE+="\");"
-    #Add the modified line to the config gifile
-    sudo echo $NEW_STARTUP_TABS_PROP_LINE >> $FILENAME
-
-} 
-    
-    
-    
 
 
 install_content_selected_language(){
     #######
     #PART1: Select Only the things that are still not installed, 
     ########
-	printf "\nALREADY INSTALLED CONTENT\n"
+	printf "\nFollowing content was already present in the system\n"
 	#Iterate on the instalable content and store in a new variable everything that is still not installed
 	for line in "${HD_AVAILABLE_CONTENT[@]}" 
 	do
@@ -499,6 +553,7 @@ install_content_selected_language(){
 			HD_AVAILABLE_NON_INSTALLED_CONTENT+=("$line")	
 		fi
 	done
+    printf "---------------------------------------------------\n"
 
 
 
@@ -594,33 +649,34 @@ install_content_selected_language(){
 		NEW_HTML_FILE="$SOURCE_DIR/wiki-archive/wikis/PT/index-pt.html"
 		TEMP_HTML_FILE="$DEST_DIR/wikis/PT/index-pt_temp.html"
 		FINAL_HTML_FILE="$DEST_DIR/wikis/PT/index-pt.html"
-	elif [ $LANG_CONTENT == "AR" ];
+	elif [ $LANG_CONTENT == "SW" ];
 	then
-
-		FINAL_HTML_FILE="$DEST_DIR/wikis/AR/ar-kaos/index.html"
-        if [[ $FINAL_HTML_FILE == /mnt* ]]  
-            then  
-      	    FINAL_HTML_FILE=${FINAL_HTML_FILE:4}  
-        fi
-        add_firefox_startTAB_labdoo_student $FINAL_HTML_FILE
-        printf "JUST ADDED: $FINAL_HTML_FILE as MENU INDEX html file\n" 
-        return 1
+		NEW_HTML_FILE="$SOURCE_DIR/wiki-archive/wikis/SW/index-sw.html"
+		TEMP_HTML_FILE="$DEST_DIR/wikis/SW/index-sw_temp.html"
+		FINAL_HTML_FILE="$DEST_DIR/wikis/SW/index-sw.html"
+	elif [ $LANG_CONTENT == "NE" ];
+	then
+	#
+	#	BEWARE NEPLA HAS ONLY ONE CONTENT	
+	#
+		NEW_HTML_FILE="$DEST_DIR/wikis/NE/en-ole_nepal/index.html"
+		TEMP_HTML_FILE="$DEST_DIR/wikis/NE/en-ole_nepal/index_TEMP.html"
+		FINAL_HTML_FILE="$DEST_DIR/wikis/NE/en-ole_nepal/index_labdoo.html"
 	else
 		printf "The language ${yellow_colour} $LANG_CONTENT  ${end_colour} Does not have any Wiki content to be accessed from Firefox, skipping default tab operations \n"
 		return 1
 	fi
 
 
-
     cp $NEW_HTML_FILE $FINAL_HTML_FILE
     #Iterate on that content and store in a new variable everything that is still not installed
     for line in "${HD_NON_INSTALLED_IN_THE_END[@]}"
-        do
+    do
 	    file_name=$(echo $line | awk -F',' '{print $2}' )
         printf "REMOVING: $file_name from MENU INDEX html file\n" 
         grep -v $file_name  $FINAL_HTML_FILE > $TEMP_HTML_FILE
         mv $TEMP_HTML_FILE $FINAL_HTML_FILE
-     done
+    done
 
  
     #Now ADD THE LANGUAGE SPECIFIC INDEX.HTML [$FINAL_HTML_FILE]for all the pertinent users
@@ -628,12 +684,46 @@ install_content_selected_language(){
 	#Correction to remove the 'mnt' part when invoking from labtix (destination as moutned unit), although we are copying and always
 	#working with the index file as /mnt/home/... when puting in the properties, of course the /mnt has to be removed 
     if [[ $FINAL_HTML_FILE == /mnt* ]]  
-        then  
-  	    FINAL_HTML_FILE=${FINAL_HTML_FILE:4}  
+    then  
+  	FINAL_HTML_FILE=${FINAL_HTML_FILE:4}  
     fi
-	
+	printf "ADDING Firexox default tab   ${red_colour} $FINAL_HTML_FILE  ${end_colour} \n"
 
-    add_firefox_startTAB_labdoo_student $FINAL_HTML_FILE
+
+## For Labdoo / get the name of the Firefox confi file
+    FILENAME=$(find $DEST_DIR/.. -name prefs.js | grep firefox)
+    STARTUP_TABS_PROP_LINE=$(grep "browser.startup.homepage\"" $FILENAME)
+    #Remove the line from the file
+    grep -v "browser.startup.homepage\"" $FILENAME > $TEMP_HTML_FILE
+    mv $TEMP_HTML_FILE $FILENAME
+    #Add the tab to the startup properties line
+    NEW_STARTUP_TABS_PROP_LINE=${STARTUP_TABS_PROP_LINE::-3}
+    NEW_STARTUP_TABS_PROP_LINE+="|"
+    NEW_STARTUP_TABS_PROP_LINE=$NEW_STARTUP_TABS_PROP_LINE$FINAL_HTML_FILE
+    NEW_STARTUP_TABS_PROP_LINE+="\");"
+    #Add the modified line to the config gifile
+    echo $NEW_STARTUP_TABS_PROP_LINE >> $FILENAME
+
+# For Student user / get the name of the Firefox confi file
+    FILENAME=$(sudo find $DEST_DIR/../../student -name prefs.js | grep firefox)
+    STARTUP_TABS_PROP_LINE=$(sudo grep "browser.startup.homepage\"" $FILENAME)
+    if [ -z "$STARTUP_TABS_PROP_LINE" ];
+        then
+        sudo echo "user_pref(\"browser.startup.homepage\", \"about:newtab\");" >> $FILENAME
+        STARTUP_TABS_PROP_LINE="user_pref(\"browser.startup.homepage\", \"about:newtab\");"
+    else
+        #Remove the line from the file
+        sudo grep -v "browser.startup.homepage\"" $FILENAME > $TEMP_HTML_FILE
+        sudo mv -f $TEMP_HTML_FILE $FILENAME
+    fi
+    #Add the tab to the startup properties line
+    NEW_STARTUP_TABS_PROP_LINE=${STARTUP_TABS_PROP_LINE::-3}
+    NEW_STARTUP_TABS_PROP_LINE+="|"
+    NEW_STARTUP_TABS_PROP_LINE=$NEW_STARTUP_TABS_PROP_LINE$FINAL_HTML_FILE
+    NEW_STARTUP_TABS_PROP_LINE+="\");"
+    #Add the modified line to the config gifile
+    sudo echo $NEW_STARTUP_TABS_PROP_LINE >> $FILENAME
+ 
 
 
 }
