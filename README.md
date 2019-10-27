@@ -1,48 +1,4 @@
-Table of Contents
 
-[Description 1](#description)
-
-[Autodeploy\_18.sh : 1](#autodeploy_18.sh)
-
-[install\_content\_labdoo.sh : 1](#install_content_labdoo.sh)
-
-[Where to obtain the latest version of the scripts
-2](#where-to-obtain-the-latest-version-of-the-scripts)
-
-[Copying the scripts after booting Labtix
-2](#copying-the-scripts-after-booting-labtix)
-
-[Using autodeploy\_18.sh 3](#using-autodeploy_18.sh)
-
-[Question 1: Select the disk you want to ERASE and RESTORE the image in
-4](#question-1-select-the-disk-you-want-to-erase-and-restore-the-image-in)
-
-[Question 2: Select the disk you want to use as SOURCE
-5](#question-2-select-the-disk-you-want-to-use-as-source)
-
-[Question 3: In which disk you have the additional contents
-5](#question-3-in-which-disk-you-have-the-additional-contents)
-
-[Question 4: Select the image you want to restore
-5](#question-4-select-the-image-you-want-to-restore)
-
-[Question 5: Set a hostid automatically
-6](#question-5-set-a-hostid-automatically)
-
-[Question 6: Possibility to skip the shredding
-7](#question-6-possibility-to-skip-the-shredding)
-
-[Question 7: Installation of additional contents
-7](#question-7-installation-of-additional-contents)
-
-[Question 8: what to do when the process finishes
-8](#question-8-what-to-do-when-the-process-finishes)
-
-[Using install\_content\_labdoo.sh 9](#using-install_content_labdoo.sh)
-
-[Configuration Parameters 9](#configuration-parameters)
-
-[Using the script 9](#using-the-script)
 
 Description
 ===========
@@ -111,7 +67,6 @@ height="2.053472222222222in"}
 ![](./media/image4.png){width="2.170138888888889in"
 height="1.7840277777777778in"}
 
-1.  
 
 Using autodeploy\_18.sh
 =======================
