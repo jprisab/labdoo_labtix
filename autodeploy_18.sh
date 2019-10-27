@@ -1,4 +1,11 @@
 #!/bin/bash
+#version 0.62 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [09/2019]
+#Added the lines to modify the hostid if in the image is labdoo-0001xxxx instead of 00001xxxx, bacause Ralf in some images puts ist like that, so I have to adapt me
+#Simplified OS language selection
+#Added contents of v0.62 of the installcontetns
+#[08/2019]
+#Simplification and adding the possibilitz to search images along the disk and to restore contents from a second USB HD
+#Same to search automaticallz where the contents are, and the install contents script
 #version 0.50 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [30/08]
 #Cosmetic Corrections
 #Modified to offer offer all the languages added in the v0.50 of install_labdoo_contents [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA]
@@ -10,6 +17,9 @@ red_colour=$'\e[1;31m'
 yellow_colour=$'\e[1;33m'
 end_colour=$'\e[1;0m'
 
+#Size to leave free in the HD, when installing additional contents, we need to set a thereshold to guarantee that disk is not getting full
+HDSIZELEAVEFREE=10000
+
 #
 #INDEX OF THE PARTS OF THE SCRIPT 
 ####
@@ -17,52 +27,60 @@ end_colour=$'\e[1;0m'
 ###
 # PART0: CONFIG PARAMETERS
 # PART1: CHECK THAT OS is booted is in the same architecture as the system is, to avoid restoring in a wrong OS mode
-# PART2: Check that the configured SOURCE path has some images on it
-# PART3: Check the paramters of the system to see wich images we can use (Architecture and disk size)
-# PART4: Ask the desired language of the IMAGE and propose and calculate images to install based on architecture and disksize 
+# PART2: (Removed) Check that the configured SOURCE path has some images on it
+# PART3: (Removed) Check the paramters of the system to see wich images we can use (Architecture and disk size)
+# PART4: (Removed) Ask the desired language of the IMAGE and propose and calculate images to install based on architecture and disksize 
+# PART4: Show all the avilable images and ask wich one to be installed
 # PART5: Ask Some additional questions (change hositid, skip shredding, what to do when finished)
 # PART6: Since the deletion is going to start and give you some time, gather the parameters, in case you want to copy down
 # PART7: Shreding
 # PART8: RESTORE Redimension the partition table, check filesystem and call it a day
 # PART9: If user selected, set the new hostid
-# PART10: If user selected, shut down or suspend
+# PART10: If user selected, deploy the additional content
+# PART11: If user selected, shut down or suspend
 ###
  
  
-#NOW IS WHERE YOU DEFINE YOUR IMAGES
-#ARCHITECTURE,LANGUAGE,MIN_DISK_SIZE.NAME_OF_IMAGE they are the directories you have
-AVAILABLE_IMGS=(
-        "32,EN,40,PAE32_18_04_LTS"
-	"32,EN,80,PAE32_18_04_LTS_EN_80"
-	"32,ES,80,PAE32_18_04_LTS_ES"
-	"32,FR,80,PAE32_18_04_LTS_FR"
-        "64,EN,40,PAE64_18_04_LTS"
-        "64,EN,80,PAE64_18_04_LTS_EN_80"
-	"64,EN,160,PAE64_18_04_LTS_EN_160"
-	"64,EN,200,PAE64_18_04_LTS_EN_250"
-	"64,ES,80,PAE64_18_04_LTS_ES"
-	"64,FR,80,PAE64_18_04_LTS_FR"
-	"64,DE,120,PAE64_18_04_LTS_Refugees_DE"
-)
 
 
 #PART 0 : Select disks
 AVAILABLE_DISKS=$(fdisk -l | grep Disk | grep sd | awk -F',' '{print $1}')
 
+clear
+printf "${red_colour}Welcome to the LABDOO shreding and restoring tool v0.6! ${end_colour}
 
-printf "${red_colour}Welcome to the LABDOO shreding and restoring tool! Thank you for helping the project${end_colour}\n"
-printf "${yellow_colour}Select the DISK you want to ${red_colour}DELETE${yellow_colour} and RESTORE your image IN${end_colour} \n"
+The following script will allow you in a very easy way to perform the steps to:
+1- Delete all the contents of the internal Hard Disk of the laptop where it is being executed
+2- Restore one of the Labdoo Prepared images in one of our main Languages (ES,EN,DE,FR) if available in your connected USB Hard Drive
+3- Set the hostname of the restored machine
+4.- If desired, automatically copy additional contents (in additional languages, downloaded from the Labdoo FTP) f available in your connected USB Hard Drive
+
+${yellow_colour}For this to success, we will need to gather some information before all the automatization starts${end_colour}
+-Where the disks are located
+-what exact version do you want to restore
+-Hostname that you want to set (if you want, you can skip this and do it after the restore)
+-Wich additional content do you want to have automatically added (if you want, you can skip this and do it after the restore)
+
+${red_colour}LETS START${end_colour}
+"
+printf "${yellow_colour}Select the DISK you want to ${red_colour}ERASED{yellow_colour} and RESTORE your image${end_colour} "
 read -p "Available DISKS:
 $AVAILABLE_DISKS
 [Valid format: sda / sdb / sdc /...]
 ->" target_disk
 
-printf "${yellow_colour}Select the DISK you want to use as ${red_colour}SOURCE ${yellow_colour} of the images to restore ${end_colour} (please be aware that the script is expecting a determined directory tree structure, please read the instrucitons for further info)\n"
-read -p "$AVAILABLE_DISKS
+printf "\n\n${yellow_colour}Select the DISK you want to use as ${red_colour}SOURCE ${yellow_colour} of the images to restore ${end_colour} (please be aware that the script is expecting a determined directory tree structure, please read the instrucitons for further info)\n"
+read -p "Available DISKS:
+$AVAILABLE_DISKS
 [Valid format: sda / sdb / sdc /... / (samba) ]
 ->" source_disk
 
-
+printf "\n${yellow_colour}Select the DISK where you have stored the additional contents ${end_colour} If you want to add the contents in additional languages, and they are in a different USB HD disk that the previosuly specified SOURCE DISK, you can specify it now
+If you dont have the ADDITIONAL CONTENTS in a separate USB DISK, or do not want to install any additional content or dont know what I am talking about, just PRESS ENTER"
+read -p "Available DISKS:
+$AVAILABLE_DISKS
+[Valid format: sda / sdb / sdc /... / (samba) ]
+->" addcontent_disk
 
 
 
@@ -91,49 +109,6 @@ else
 fi
 
 
-
-
-
-
-printf "${yellow_colour}THESE ARE THE IMAGES that I can see in the directory. They should match the ones you have configured in the script${end_colour}\n"
-
-ls  -alrt /home/partimag | grep PAE
-
-
-
-
-
-
-###
-# PART1: CHECK THAT OS is booted is in the same architecture as the system is, to avoid restoring in a wrong OS mode
-###
-#
-#Evaluate architecture of processor
-lscpu | grep 64-bit
-if [ $? -eq 0 ]
-then 
-architecture="64"
-else
-architecture="32"
-fi
-
-#Evaluate architecture in which the OS is booted
-architecture_os=$(uname -m) # i686 if 32b / x86_64 if 64bit
-
-#Check that both match otherwise exit
-if [[ ( "$architecture" -eq 64 && "$architecture_os" = "x86_64" ) || ( "$architecture" -eq 32 && "$architecture_os" = "i686" ) ]]; then
-	echo "OS is $architecture_os and Processor is $architecture bit. The architecture are aligned, continue."
-else
-	printf "${red_colour}OS is $architecture_os and Processor is $architecture bit. If you are using LABTIX You can go ahead
-If you are using Parted Magic you should reboot in $architecture Bit Mode. Otherwise your restore might not work (this problem is only seen in PartedMagic)${end_colour}\n"
-	read -p "Press Ctrl-C to exit or Enter to continue<-  " ANSWER
-fi
-
-
-
-
-
-
 ###
 # PART2: Check that the configured SOURCE path has some images on it // Removed, it will be checked after selecting the image
 ###
@@ -145,79 +120,41 @@ fi
 # PART3: Check the paramters of the system to see wich images we can use (Architecture and disk size)
 ###
 #Evaluate disk size
-
+clear
 disksize=$(lsblk -b /dev/$target_disk -n -o SIZE |head -n 1)
 echo "Disksize read: $disksize" >/root/labdoo_install.log
 disksizeGB=$(expr $disksize / 1073741824)    # Get the size and Gb will be much more clear
 echo "Disksize read by autodeploy script in Gb: $disksizeGB" >/root/labdoo_install.log
-echo "Disksize read by autodeploy script in Gb: $disksizeGB"
-echo "Architecture read: $architecture" >>/root/labdoo_install.log
-echo "Architecture read: $architecture"
+echo "Disksize Available in your the Hard DRIVE of the laptop, ${target_disk}, in Gb: $disksizeGB"
+echo "Searching for labdoo images in your USB HD ${source_disk}"
+
+
 
 ###
 # PART4: Ask the desired language of the IMAGE and propose and calculate images to install based on architecture and disksize
 ###
+AVAILABLE_IMGS=($(find  /home/partimag -maxdepth 3 -type d -print | grep PAE | grep -E 'LTS'))
 
-printf "${yellow_colour}Images CONFIGURED as Available ${end_colour}\n"
-printf "${yellow_colour}ARCHITECTURE,LANGUAGE,MIN_DISK_SIZE.NAME_OF_IMAGE ${end_colour}\n"	
-for line in "${AVAILABLE_IMGS[@]}"
+
+
+
+
+printf "\n\n\n${yellow_colour}These are the Images you can install,So Select the number representing the option you want to install  ${end_colour}\n keep in mind the notation: PAE<bits>_18_04_LTS_<language>_<minSize>, where:  \n <bits> is the machine architecture [32/64] \n <language> is the main language of the system restored [ES/EN/DE/FR] \n <minSize> is the minimum required HD size of the machine where you restore that Image\n"		
+for i in "${!AVAILABLE_IMGS[@]}"
 do
-	echo "$line"
-done
-
-
-if [ "$architecture" -eq 64 ]; then
-	USABLE_IMGS=(${AVAILABLE_IMGS[@]//32*})
-elif [ "$architecture" -eq 32 ]; then
-	USABLE_IMGS=(${AVAILABLE_IMGS[@]//64*})
-else
-	echo "I AM HAVING PROBLEM FINDING IMAGES FOR YOUR ARCHITECTURE"
-	echo "SORRY, NEED TO LEAVE"
-	exit
-fi
-
-
-USABLE_IMGS2=()
-read -p "
-
-So the OPERATIVE SYSTEM DISK IMAGE of which of these language do you want to install? [ EN / DE / ES / FR ] <-  " ANSWER
-LANGUAGE=`echo $ANSWER | awk '{print toupper($0)}'`	
-UANSWER=",$LANGUAGE,"
-for line in "${USABLE_IMGS[@]}"
-do
-	if [[ $line = *"$UANSWER"* ]]; then
-
-	        USABLE_IMGS2+=("$line")
-	fi
-done
-
-USABLE_IMGS3=()
-for line in "${USABLE_IMGS2[@]}"
-do
-	imagesize=$(echo $line | awk -F',' '{print $3}')
-	if  [[ $imagesize -lt $disksizeGB ]]; then
-		USABLE_IMGS3+=("$line")	
-	fi
-done
-printf "${yellow_colour}Images I CAN Deploy in this computer based on your ARCHITECTURE = $architecture, your LANGUAGE DECISSION = $LANGUAGE and your DISK SIZE = $disksizeGB GB ${end_colour} \n"
-
-printf "${yellow_colour}ARCHITECTURE,LANGUAGE,MIN_DISK_SIZE.NAME_OF_IMAGE ${end_colour}\n"		
-for i in "${!USABLE_IMGS3[@]}"
-do
-	echo "$i - ${USABLE_IMGS3[$i]}"
+	echo "$i - ${AVAILABLE_IMGS[$i]}"
 done
 
 
 read -p "
-
-So Select the number representing the option you want to install [ 0 / 1 / ... ] 
+[ 0 / 1 / ... ] 
 ->  " ANSWER
 
-IMAGEDIRTOINSTALL=$(echo ${USABLE_IMGS3[$ANSWER]} | awk -F',' '{print $4}')
+IMAGEDIRTOINSTALL=$(echo ${AVAILABLE_IMGS[$ANSWER]})
 printf "${red_colour}SELECTED: $IMAGEDIRTOINSTALL ${end_colour}\n"		
 
 #Check if no image found, exit here
-if [ ! -d "/home/partimag/$IMAGEDIRTOINSTALL" ]; then
+if [ ! -d "$IMAGEDIRTOINSTALL" ]; then
 	echo "The Selected Image directory $IMAGEDIRTOINSTALL does not exist in the HD root directory, please check it. 
 ...Exiting...."
     exit 1
@@ -228,7 +165,7 @@ fi
 ###
 
 # PART5a: Ask if you want to change hostid
-printf "${yellow_colour}If you want to want to set already a host-id, it can be automatically set during restore, just need to give me the 5 last numbers labdoo-0000xxxxx${end_colour}\n"		
+printf "\n\n\n${yellow_colour}If you want to want to set already a host-id, it can be automatically set during restore, just need to give me the 5 last numbers labdoo-0000xxxxx${end_colour}\n"		
 read -p "Write the xxxxx in labdoo-0000xxxxx if your input is empty, then the hostid will not be modified by this script <-  " ANSWER
 hostidnumber="labdoo-00001xxxx"
 echo $ANSWER| grep "[0-9][0-9][0-9][0-9][0-9]"
@@ -251,8 +188,11 @@ read -p "If you are COMPLETELY sure you want to skip disk deletion type exactly 
 ->  " avoid_shred
 
 
-#PART5c: Ask additional contents installation[For part 9-b]
-printf "\n -------------------------------------------\n  ${yellow_colour}YOU CAN INSTALL ADDITIONAL CONTENTS!! ${end_colour} Remember that you need to have the install_content_labdoo script properly configured and the contents to install stored in your SOURCE disk following an specific directory tree structure (please check the documentation if you have any doubt) \n "
+#PART5c: Ask additional contents installation[For part 10]
+printf "\n -------------------------------------------\n 
+\n -------------------------------------------\n 
+ ${red_colour}YOU CAN INSTALL ADDITIONAL CONTENTS!! ${end_colour} 
+Remember that you need to have the install_content_labdoo script properly configured and the contents to install stored in your SOURCE disk following an specific directory tree structure (please check the documentation if you have any doubt) \n "
 
 
 
@@ -260,8 +200,8 @@ printf "\nSelect the languages you want the labdoo_install_content to install af
 Do not be afraid, if something was already installed, the script will skip it
 The disk will never get full (we leave a 10Gb free space)
 Indicate the comma separated values for the contents you want to install (empty if none) 
-${yellow_colour} Currently supported languages: [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA] ${end_colour}
-Comma separated values will install multiple languages: ie: EN (English only) / SW,EN (Swahili+English) / ES,SW,EN (Spanish+Swahili+English)   ...ES,EN,SW,AR,HI,DE,FR,NE,ID,PT,ZH,RU,RO,IT,FA (all of them :) )"
+${yellow_colour} Currently supported languages: [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA / MY / HU / ZU / SR / UK] ${end_colour}
+Comma separated values will install multiple languages: ie: EN (English only) / SW,EN (Swahili+English) / ES,SW,EN (Spanish+Swahili+English)   ...ES,EN,SW,AR,HI,DE,FR,NE,ID,PT,ZH,RU,RO,IT,FA,MY,HU,ZU,SR,UK (all of them :) )"
 
 read -p "[ EN / SW,EN / ES,FA,EN / ... ]
 ->  " languages_contents
@@ -353,9 +293,9 @@ fi
 ###
 # PART8: RESTORE Redimension the partition table, check filesystem
 ###
-
+IMAGETOINSTALL=${IMAGEDIRTOINSTALL//\/home\/partimag\//}
 ocssr=$(which ocs-sr)
-$ocssr -g auto -e1 auto -e2 -batch -r -icds -scr -j2 -p true restoredisk "$IMAGEDIRTOINSTALL" $target_disk	
+$ocssr -g auto -e1 auto -e2 -batch -r -icds -scr -j2 -p true restoredisk "$IMAGETOINSTALL" $target_disk	
 
 rootuuid=$(blkid |grep ext4 |awk -F'\"' '{print $2}')
 
@@ -395,25 +335,59 @@ if [ '$hostidnumber' = 'labdoo-00001xxxx' ]; then
 else
 	echo "Setting new hostid ${hostidnumber} as requested"
 	echo "autodeploy setted a new hostid ${hostidnumber} as requested" >> /root/labdoo_install.log
-	sed -i "s/labdoo-00001xxxx/${hostidnumber}/g" /mnt/etc/hosts
-        sed -i "s/labdoo-00001xxxx/${hostidnumber}/g" /mnt/etc/hostname
+
+	#Added also the case if Ralf sets the hostname as labdoo-00001xxxx instead of labdoo-0001xxxx
+	sed -i "s/labdo-000[^ ]*/${hostidnumber}/" /mnt/etc/hosts	
+	sed -i "s/labdo-000[^ ]*/${hostidnumber}/" /mnt/etc/hostname
+	
+
 	
 fi;
 
 
-
+#PART 10:INSTALLATION OF ADDITIONAL CONTENTS
+############################################
 
 #bash install_labdoo_contents.sh -l <language> -s <source contents> -d <destination contetns> -f <Megas to be left free during restoration>
+if [[ ! -z "$addcontent_disk" ]]; then
+	printf "Mounting additional content disk"
+	
+	addcontent_disk="${addcontent_disk}1"
+	umount /home/partimag 2> /dev/null
+	rmdir /home/partimag 2> /dev/null
+	mkdir /home/partimag
+	mount /dev/$addcontent_disk /home/partimag
+fi
 
- ##LO QUE VENDRA EN 9-b
-for line in "${languages_install[@]}"
-do
-	printf "\nTrying to the contents for language  ${yellow_colour} $line ${end_colour} as requested until disk is almost full [leave 10Gb Free]\n "
-	printf "\nEXECUTING: bash install_labdoo_contents.sh -l $line -s <source contents> -d <destination contetns> -f 10000 \n " 
-	bash install_labdoo_contents.sh -l $line -s /home/partimag -d /mnt/home/labdoo/Public -f 10000
+#SEARCH for the contents	
+ROOTDIRECTORYCONTENTS=""
+ROOTDIRECTORYCONTENTS=$(find  /home/partimag -type d -print | grep '\/wiki-archive\/wikis/'  | head -1 | awk '{sub(/\/wiki-archive\/wikis\/.*/, ""); print}')
 
-done
-
+#SEARCH for the install labdoo contents script, so that if creating the labtix iso thez put it somewhere else, we can still find it and use it
+#First check in the local directory, in case you copied the new scripts in the same directory
+#If not go to the root and search
+INSTCONTNTSCRIPT=""
+if [ -z $INSTCONTNTSCRIPT ]
+then
+	INSTCONTNTSCRIPT=$(find  . -print | grep install_labdoo_contents | head -1) 
+fi
+if [ -z $INSTCONTNTSCRIPT ]
+then
+	INSTCONTNTSCRIPT=$(find  /root -print | grep install_labdoo_contents | head -1)
+fi
+if [   -z $INSTCONTNTSCRIPT ] || [ -z $ROOTDIRECTORYCONTENTS ] 
+then
+	printf "${red_colour} ERROR: Problem finding contents OR script for the content installation ${end_colour} \n
+	The additional contents will not be installed\n" 	
+else
+	printf "${yellow_colour} Starting installation of additionall contents as selected${end_colour} \n" 
+	for line in "${languages_install[@]}"
+	do
+		printf "\nTrying to the contents for language  ${yellow_colour} $line ${end_colour} as requested until disk is almost full [leaving $HDSIZELEAVEFREE Mb Free]\n "
+		printf "\nEXECUTING: bash $INSTCONTNTSCRIPT -l $line -s $ROOTDIRECTORYCONTENTS -d <destination contetns> -f $HDSIZELEAVEFREE \n " 
+		bash $INSTCONTNTSCRIPT -l $line -s $ROOTDIRECTORYCONTENTS -d /mnt/home/labdoo/Public -f $HDSIZELEAVEFREE
+	done
+fi
 
 
 umount /home/partimag
@@ -424,7 +398,7 @@ printf "You can find the restored content under /mnt in case you want to check s
 
 
 ###
-# PART10: If user selected, shut down or suspend
+# PART11: If user selected, shut down or suspend
 ###
 #Optionally shutdown Computer
 if [ $shutdown_after_deploy -eq 1 ]; then
