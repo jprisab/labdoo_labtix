@@ -369,7 +369,7 @@ ROOTDIRECTORYCONTENTS=$(find  /home/partimag -type d -print | grep '\/wiki-archi
 INSTCONTNTSCRIPT=""
 if [ -z $INSTCONTNTSCRIPT ]
 then
-	INSTCONTNTSCRIPT=$(find  . -print | grep install_labdoo_contetns | head -1) 
+	INSTCONTNTSCRIPT=$(find  . -print | grep install_labdoo_contents | head -1) 
 fi
 if [ -z $INSTCONTNTSCRIPT ]
 then
