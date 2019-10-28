@@ -1,4 +1,5 @@
 #!/bin/bash
+#version 0.63 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [09/2019]
 #version 0.62 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [09/2019]
 #Added the lines to modify the hostid if in the image is labdoo-0001xxxx instead of 00001xxxx, bacause Ralf in some images puts ist like that, so I have to adapt me
 #Simplified OS language selection
@@ -337,8 +338,8 @@ else
 	echo "autodeploy setted a new hostid ${hostidnumber} as requested" >> /root/labdoo_install.log
 
 	#Added also the case if Ralf sets the hostname as labdoo-00001xxxx instead of labdoo-0001xxxx
-	sed -i "s/labdo-000[^ ]*/${hostidnumber}/" /mnt/etc/hosts	
-	sed -i "s/labdo-000[^ ]*/${hostidnumber}/" /mnt/etc/hostname
+	sed -i "s/labdoo-000[^ ]*/${hostidnumber}/" /mnt/etc/hosts	
+	sed -i "s/labdoo-000[^ ]*/${hostidnumber}/" /mnt/etc/hostname
 	
 
 	
