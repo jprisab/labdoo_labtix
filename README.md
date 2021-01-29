@@ -1,5 +1,8 @@
 
 
+OUTDATED!!! Not compatible with current web pages and current usage of kiwix
+===========
+
 Description
 ===========
 
