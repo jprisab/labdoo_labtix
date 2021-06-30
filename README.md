@@ -6,12 +6,25 @@ UPDATED!!! Working with Labdoo 20
 Description
 ===========
 
-These 2 bash scripts are designed to automate the restoration of the
+The scripts bellow allow you to prepare a LABDOO laptop within seconds just by calling the one script launch_autodeploy.sh from a terminal
+This script can be used after booting:
+via a Labtix, PartedMagic or any other liveCD linux distribution either in grafical mode or after a console boot (if you are experiencing problems to boot LiceCD in graphical mode)
+
+
+These scripts are designed to automate the restoration of the
 images and the content of the labdoo Images shared under http://ftp.labdoo.org/download/install-disk/
 allowing to perform a complete end-to-end sanitazion of the laptop in an
 unattended way.
 
-### **Autodeploy.sh** : 
+### **launch_autodeploy.sh** : 
+
+This is the main script that starts the whole process
+since version 20 you dont need to copy this script locally to the Laptop you are restoring
+
+Just make sure the laboo_labtix (this) folder is in the USB Harddrive that you will use for the images. After booting, mount the HD, call this script (#~> bash launch_autodeploy.sh) and it will take care of invoking the correct commands 
+
+
+### **autodeploy.sh** : 
 
 shredding of the harddrive (optional)
 
