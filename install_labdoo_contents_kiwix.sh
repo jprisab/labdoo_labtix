@@ -67,7 +67,7 @@ if [  -z  "$MB_TO_BE_LEFT" ];
 		printf "Assigned MB_TO_BE_LEFT=$MB_TO_BE_LEFT by default\n"
 fi
 
-    printf "${yellow_colour}LABDOO KIWIX CONTENT INSTALLER YOU HAVE CALLED THE SCRIPT WITH THE FOLLOWING PARAMTERS  ${end_colour}\n"
+    printf "${yellow_colour}LABDOO KIWIX CONTENT INSTALLER YOU HAVE CALLED THE SCRIPT WITH THE FOLLOWING PARAMETERS  ${end_colour}\n"
     printf "${yellow_colour}LANGUAGE:   ${end_colour} $LANG_CONTENT\n"
     printf "${yellow_colour}SOURCE_DIR:   ${end_colour} $SOURCE_DIR\n"
     printf "${yellow_colour}DEST_DIR:   ${end_colour} $DEST_DIR\n"
