@@ -1,15 +1,14 @@
 
 
-UPDATED!!! Working with Labdoo 20
+UPDATED!!! Working with Labdoo 20 and offering ATA secure erase
 ===========
 
 Description
 ===========
 
-The scripts bellow allow you to prepare a LABDOO laptop within seconds just by calling the one script launch_autodeploy.sh from a terminal
-This script can be used after booting:
-via a Labtix, PartedMagic or any other liveCD linux distribution either in graphical mode or after a console boot (if you are experiencing problems to boot LiceCD in graphical mode)
+The scripts bellow allow you to prepare a LABDOO laptop within seconds just by calling the one script autodeploy.sh from a terminal
 
+This script can be used after booting via a Labtix, PartedMagic or any other liveCD linux distribution either in graphical mode or after a console boot (if you are experiencing problems to boot LiceCD in graphical mode)
 
 These scripts are designed to automate the restoration of the
 images and the content of the labdoo Images shared under http://ftp.labdoo.org/download/install-disk/
