@@ -3,8 +3,8 @@
 #version 2.0 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [05/2021]
 #Changed the contents install for call to install_labdoo_contents_kiwix.#!/bin/sh
 #Add option to remove autostart firefox and teams
-
-#This script comes without  warranty.
+#version 3.1 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [11/2021]
+#Include calling ATA Secure Erase if possible
 
 red_colour=$'\e[1;31m'
 yellow_colour=$'\e[1;33m'
@@ -34,21 +34,20 @@ HDSIZELEAVEFREE=10000
 mapfile -t AVAILABLE_DISKS < <(fdisk -l | grep Disk | grep sd | awk -F',| ' '{print $2" "$3" "$4}' )
 mapfile -t AVAILABLE_PARTITIONS < <(fdisk -l  | grep '^/dev/'  )
 
-printf "${red_colour}Welcome to the LABDOO shreding and restoring tool v1.0! ${end_colour}
+printf "${red_colour}Welcome to the LABDOO shreding and restoring tool! ${end_colour}
 The following script will allow you in a very easy way to perform the steps to:
 1.- Delete all the contents of the internal Hard Disk of the laptop where it is being executed
 2.- Restore one of the Labdoo Prepared images in one of our main Languages (ES,EN,DE,FR) if available in your connected USB Hard Drive
 3.- Set the hostname of the restored machine
 4.- If desired, automatically copy additional KIWIX contents if available in your connected USB Hard Drive
-${yellow_colour}For this to success, we will need to gather some information before all the automatization starts${end_colour}
---------------------------------------------------------------------------
+For this to success, we wpill need to gather some information before all the automatization starts
 "
 
 
 #PART 1 : Select disks
 
-
-printf "\n\n\n${yellow_colour}Select the DISK you want to ${red_colour}ERASED${yellow_colour} and RESTORE your image in${end_colour}\n"
+printf "\n-------------------------------------------------------------------------"
+printf "\n${yellow_colour}Select the DISK you want to have ${red_colour}ERASED${yellow_colour}, where the Labdoo image will be restored afterwards${end_colour}\n"
 for i in "${!AVAILABLE_DISKS[@]}"
 do
 	echo "$i - ${AVAILABLE_DISKS[$i]}"
@@ -60,38 +59,8 @@ read -p "[ 0 / 1 / 2 / 3 ... ]
 target_disk=$(echo ${AVAILABLE_DISKS[$ANSWER]} | awk -F':' '{print $1}')
 printf "${red_colour}SELECTED: $target_disk ${end_colour}\n"
 
-
-#PART 1 :
-printf "${red_colour}Do you want to attempt ATA Secure delete on: $target_disk ${end_colour}?\n"
-while true; do
-    read -p "Select [y]es or [n]o?" yn
-    case $yn in
-        [Yy]* ) ATA_DELETE=1; break;;
-        [Nn]* ) ATA_DELETE=0; break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
-if [ "$ATA_DELETE" == "1" ]; then
-    echo "You have selected to perform a ATA secure delete in $target_disk, calling:"
-		echo "bash labdoo_erase_disk.sh $target_disk"
-		bash labdoo_erase_disk.sh $target_disk
-		if [ "$?" -eq 0 ]
-			then
-	 		echo "ATA ERASE EXECUTED CORRECTLY!!! You need to restart the Laptop for the erased disk to be recognized"
-			echo "You can then restart the autodeplo.sh script and skip all the deletion activities"
-		else
-			echo "ATA ERASE FAILED!!!   You can continue the normal autodeploy process with regular shreding of the disk"
-		fi
-
-else
-		    echo "You have selected to skip the ATA secure delete in $target_disk, if you did not erase it previously, please delete it with shred"
-fi
-
-
-
-
-printf "\n${yellow_colour}Select the PARTITION where you have stored the IMAGES ${end_colour} \n"
+printf "\n-------------------------------------------------------------------------"
+printf "\n${yellow_colour}Select the PARTITION where you have stored the Labdoo IMAGES to restore${end_colour} \n"
 
 for i in "${!AVAILABLE_PARTITIONS[@]}"
 do
@@ -104,7 +73,8 @@ read -p "[ 0 / 1 / 2 / 3 ... ]
 source_partition=$(echo ${AVAILABLE_PARTITIONS[$ANSWER]} | awk -F' ' '{print $1}')
 printf "${red_colour}SELECTED: $source_partition ${end_colour}\n"
 
-printf "\n${yellow_colour}Select the PARTITION where you have stored the ADDITIONAL CONTENT ${end_colour} Or enter for not adding additional content\n"
+printf "\n-------------------------------------------------------------------------"
+printf "\n${yellow_colour}Select the PARTITION where you have stored the ADDITIONAL CONTENT ${end_colour} Or enter for not adding additional content at all\n"
 
 for i in "${!AVAILABLE_PARTITIONS[@]}"
 do
@@ -121,7 +91,8 @@ printf "${red_colour}SELECTED: $source_partition ${end_colour}\n"
 
 
 umount $source_partition 2> /dev/null
-printf "\n\nPROGRAM WILL WORK USING ${red_colour} $source_partition as SOURCE HD ${end_colour} to read the images from and ${red_colour} $target_disk as DESTINATION${end_colour} (will be deleted), if that is NOT what you wanted, please exit immediatly BEFORE YOU DELETE THE WRONG DISK\n"
+printf "\n--------------------------------------------------------------------------"
+printf "\n\nPROGRAM WILL ERASE  ${red_colour} $target_disk ${end_colour} and restore an image stored in ${red_colour} $source_partition ${end_colour}\n"
 read -p "Press Ctrl-C to exit or Enter to continue<-  " ANSWER
 umount /home/partimag 2> /dev/null
 rmdir /home/partimag 2> /dev/null
@@ -137,16 +108,15 @@ mount $source_partition /home/partimag
 ###
 #Evaluate disk size
 disksize=$(lsblk -b $target_disk -n -o SIZE |head -n 1)
-echo "Disksize read: $disksize" >/root/labdoo_install.log
 disksizeGB=$(expr $disksize / 1073741824)    # Get the size and Gb will be much more clear
-echo "Disksize read by autodeploy script in Gb: $disksizeGB" >/root/labdoo_install.log
-echo "Disksize Available in the Hard DRIVE of the laptop, ${target_disk} ${red_colour} $disksizeGB Gbs ${end_colour}\n"
+
+echo "Disksize Available in the Hard DRIVE  ${target_disk} ${red_colour} $disksizeGB Gbs ${end_colour}"
 echo "Searching for labdoo images in your External USB HD ${source_partition}"
 
 
 AVAILABLE_IMGS=($(find  /home/partimag -maxdepth 5 -type d -print | grep PAE | grep -E 'LTS'))
-
-printf "\n\n\n${yellow_colour}These are the Images you can install,So Select the number representing the option you want to install  ${end_colour}\n keep in mind the notation:  \n <language> is the main language of the system restored [ES/EN/DE/FR] \n <minSize> is the minimum required HD size of the machine where you restore that Image\n"
+printf "\n--------------------------------------------------------------------------"
+printf "\n${yellow_colour}These are the Images you can install,So Select the number representing the option you want to install  ${end_colour}\n keep in mind the notation:  \n <language> is the main language of the system restored [ES/EN/DE/FR] \n <minSize> is the minimum required HD size of the machine where you restore that Image\n"
 for i in "${!AVAILABLE_IMGS[@]}"
 do
 	echo "$i - ${AVAILABLE_IMGS[$i]}"
@@ -171,7 +141,8 @@ fi
 ###
 
 # PART3a: Ask if you want to change hostid
-printf "\n\n\n${yellow_colour}If you want to want to set already a host-id, it can be automatically set during restore, just need to give me the 5 last numbers labdoo-0000xxxxx${end_colour}\n"
+printf "\n--------------------------------------------------------------------------"
+printf "\n${yellow_colour}If you want to want to set already a host-id, it can be automatically set during restore, just need to give me the 5 last numbers labdoo-0000xxxxx${end_colour}\n"
 read -p "Write the xxxxx in labdoo-0000xxxxx if your input is empty, then the hostid will not be modified by this script <-  " ANSWER
 hostidnumber="labdoo-00001xxxx"
 echo $ANSWER| grep "[0-9][0-9][0-9][0-9][0-9]"
@@ -185,7 +156,8 @@ fi
 
 
 #PART3b: Ask if you want to SKIP SHRED [For part 7]
-printf "\n -------------------------------------------\n${yellow_colour}Do you want to avoid shreding? ${end_colour} Remember that Labdoo.org commits to the deletion of all the contents on the laptops provided
+printf "\n--------------------------------------------------------------------------"
+printf "\n${yellow_colour}Do you want to avoid shreding? ${end_colour} Remember that Labdoo.org commits to the deletion of all the contents on the laptops provided
 Dont choose this if you dont have a real good reason (brand new HD for example). \n"
 
 read -p "If you are COMPLETELY sure you want to skip disk deletion type exactly [YeS] (or 1 or 2)  [NORMALLY JUST PRESS ENTER for normal Labdoo restoration]
@@ -194,12 +166,8 @@ read -p "If you are COMPLETELY sure you want to skip disk deletion type exactly 
 
 #PART3c: Ask additional contents installation[For part 9-b]
 printf "\n -------------------------------------------\n
-\n -------------------------------------------\n
  ${red_colour}YOU CAN INSTALL ADDITIONAL CONTENTS!! ${end_colour}
  Remember that you need to have the install_content_labdoo script properly configured and the contents to install stored in your SOURCE disk following an specific directory tree structure (please check the documentation if you have any doubt) \n "
-
-
-
 printf "\nSelect the languages you want the labdoo_install_content to install afterwards:
 Do not be afraid, if something was already installed, the script will skip it
 The disk will never get full (we leave a 10Gb free space)
@@ -256,7 +224,7 @@ SERIAL_NUMBER=`dmidecode -s system-serial-number`
 
 
 echo "--------------------------------------------------"
-echo "    These are the current values, you might want to write them down"
+echo "These are the values on your system"
 echo "--------------------------------------------------"
     echo "Labdoo ID Number: $hostidnumber"
     echo "Nr of CPU cores:  $no_of_CPU_cores"
@@ -265,24 +233,11 @@ echo "--------------------------------------------------"
     echo "MEM_size_Mb:      $MEM_size_Mb [Mb]"
     echo "Serial Number:    $SERIAL_NUMBER"
 
-echo "--------------------------------------------------"
-
-echo "--------------------------------------------------" >>/root/labdoo_install.log
-echo "    These are the current values, you might want to write them down" >>/root/labdoo_install.log
-echo "--------------------------------------------------" >>/root/labdoo_install.log
-    echo "Nr of CPU cores:  $no_of_CPU_cores" >>/root/labdoo_install.log
-    echo "CPU max Freq:     $CPU_freq_max_MHz [MHz]" >>/root/labdoo_install.log
-    echo "HD Size:          $DISK_size_Gb [Gb]" >>/root/labdoo_install.log
-    echo "MEM_size_Mb:      $MEM_size_Mb [Mb]" >>/root/labdoo_install.log
-#    echo "Serial Number:    $SERNUM" >>/root/labdoo_install.log
-echo "--------------------------------------------------" >> /root/labdoo_install.log
-
-
 
 ###
 # PART5: Shreding
 ###
-#Shred disk
+
 
 if [ "$avoid_shred" = "YeS" ]; then
 	printf "${red_colour}SKIPPING DELETION of $target_disk  will start now. I hope you had a REAL GOOD REASON for that. Deletion of the data on donated devices is a pilar of Labdoo.org... ${end_colour} \n"
@@ -296,8 +251,37 @@ elif [ "$avoid_shred" = "2" ]; then
  	shred -n2 $target_disk -v -f
 
 else
-	printf "${yellow_colour}Removing data from $target_disk will start now. It will last a while, shred will do through the disk 3 times...  ${end_colour} \n"
- 	shred $target_disk -v -f
+	printf "\n--------------------------------------------------------------------------"
+	printf "\nNew version [2021] of the script allows you to try a ${red_colour}ATA Secure Erase${end_colour}, wich is a much safer and faster metho to whipe the HardDrive (If the HD supports it. If it fails the script will perform a shred like the previous versions)"
+	printf "\n${yellow_colour}Do you want to attempt ATA Secure delete on: $target_disk ${end_colour}?\n"
+	while true; do
+	    read -p "Select [y]es or [n]o?" yn
+	    case $yn in
+	        [Yy]* ) ATA_DELETE=1; break;;
+	        [Nn]* ) ATA_DELETE=0; break;;
+	        * ) echo "Please answer yes or no.";;
+	    esac
+	done
+
+	if [ "$ATA_DELETE" == "1" ]; then
+	    echo "You have selected to perform a ATA secure delete in $target_disk, calling:"
+			echo "bash labdoo_erase_disk.sh $target_disk"
+			bash labdoo_erase_disk.sh $target_disk
+			if [ "$?" -eq 0 ]
+				then
+		 		echo "ATA ERASE EXECUTED CORRECTLY!!!"
+			else
+				echo "ATA ERASE FAILED!!!   It will continue the OLD autodeploy process with regular shreding of the disk. "
+				printf "${yellow_colour}Removing data from $target_disk will start now. It will last a while (hours), shred will go through the disk 3 times...  ${end_colour} \n"
+			 	shred $target_disk -v -f
+			fi
+
+	else
+			    echo "You have selected to skip trying the ATA secure delete in $target_disk, so I will continue with the OLD autodeploy process with regular shreding of the disk. "
+					printf "${yellow_colour}Removing data from $target_disk will start now. t will last a while (hours), shred will go through the disk 3 times...  ${end_colour}\n"
+				 	shred $target_disk -v -f
+	fi
+
 fi
 
 
@@ -307,8 +291,7 @@ fi
 ###
 IMAGETOINSTALL=${IMAGEDIRTOINSTALL//\/home\/partimag\/}
 ocssr=$(which ocs-sr)
-#echo "JAVIER: imagen to install is $IMAGETOINSTALL"
-#echo "JAVIER: target disk is  is ${target_disk}"
+
 $ocssr -g auto -e1 auto -e2 -batch -r -icds -scr -j2 -p true restoredisk "$IMAGETOINSTALL" ${target_disk//\/dev\/}
 
 rootuuid=$(blkid |grep ext4 |awk -F'\"' '{print $2}')
@@ -316,8 +299,6 @@ rootuuid=$(blkid |grep ext4 |awk -F'\"' '{print $2}')
 
 echo "rootuuid = $rootuuid"
 startpart=$(parted $target_disk print |grep ext4 |awk '{print $2}')
-echo "Partition start at: $startpart" >>/root/labdoo_install.log
-echo "UUID ROOT: $rootuuid" >>/root/labdoo_install.log
 parted -s $target_disk rm 1
 
 #Recreate sda1 larger and reset UUID and boot flag
@@ -354,7 +335,7 @@ fi
 
 
 if [ "$remove_autostart" = "y" ]; then
-	printf "${xellow_colour}REMOVING autostart of Firefox and teams as requested ${end_colour} \n"
+	printf "${xellow_colour}REMOVING autostart of Firefox and MSTeams as requested ${end_colour} \n"
 	rm /mnt/home/labdoo/.config/autostart/firefox.desktop
 	rm /mnt/home/labdoo/.config/autostart/teams.desktop
 	rm /mnt/home/student/.config/autostart/firefox.desktop
@@ -364,7 +345,7 @@ fi
 
 #bash install_labdoo_contents.sh -l <language> -s <source contents> -d <destination contetns> -f <Megas to be left free during restoration>
 if [[ ! -z "$addcontent_disk" ]]; then
-	printf "Mounting additional content disk"
+	printf "Mounting additional content disk from $addcontent_disk"
 	umount /home/partimag 2> /dev/null
 	rmdir /home/partimag 2> /dev/null
 	mkdir /home/partimag
