@@ -15,6 +15,8 @@ images and the content of the labdoo Images shared under http://ftp.labdoo.org/d
 allowing to perform a complete end-to-end sanitazion of the laptop in an
 unattended way including the additional installaiton of KIWIX resources to enrich the images from the FTP
 
+If invoked with the flag "-u" it automates the 2-step restore process in order to have the system running in UEFI systems
+
 ### **autodeploy.sh** :
 
 This is the main script that starts the whole process

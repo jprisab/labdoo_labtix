@@ -5,6 +5,8 @@
 #Add option to remove autostart firefox and teams
 #version 3.1 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [11/2021]
 #Include calling ATA Secure Erase if possible
+#version 3.2 by Javier Prieto Sabugo (javier.prieto@labdoo.org, Labdoo Hub München (Germany)) [11/2021]
+#Include --uefi option
 
 red_colour=$'\e[1;31m'
 yellow_colour=$'\e[1;33m'
@@ -29,20 +31,52 @@ HDSIZELEAVEFREE=10000
 # PART7: If user selected, set the new hostid, install contents, additional config
 # PART8: If user selected, shut down or suspend
 ###
+UEFI_FLAG=false
+# Get the options
+for arg in "$@"
+do
+    case $arg in
+        -u|--uefi)
+        UEFI_FLAG=true
+
+        shift # Remove --initialize from processing
+        ;;
+        -h|--help)
+		printf "${red_colour}LABDOO shreding and restoring tool! ${end_colour}
+The following script will allow you in a very easy way to perform the steps to:
+1.- Delete all the contents of the internal Hard Disk of the laptop where it is being executed
+2.- Restore one of the Labdoo Prepared images in one of our main Languages (ES,EN,DE,FR) if available in your connected USB Hard Drive
+3.- Set the hostname of the restored machine
+4.- If desired, automatically copy additional KIWIX contents if available in your connected USB Hard Drive.
+Do not be afraid, if some contetn was already installed, the script will skip it
+The disk will never get full (we leave a 10Gb free space)
+
+${yellow_colour}Options: [-u|--uefi] [-h|--help]  ${end_colour}
+-u|--uefi : Restores in an EFI/UEFI system. Requires that in your USB disk is present the UEFI-Boot image can be downloaded from ftp.labdoo.org/download/install-disk/special_mages
+-h|--help : Shows help message
+"
+
+        exit;;
+        *)
+        OTHER_ARGUMENTS+=("$1")
+        shift # Remove generic argument from processing
+        ;;
+    esac
+done
+
 
 #READ VALUES FROM CONNECTED DISKS
 mapfile -t AVAILABLE_DISKS < <(fdisk -l | grep Disk | grep sd | awk -F',| ' '{print $2" "$3" "$4}' )
 mapfile -t AVAILABLE_PARTITIONS < <(fdisk -l  | grep '^/dev/'  )
 
-printf "${red_colour}Welcome to the LABDOO shreding and restoring tool! ${end_colour}
-The following script will allow you in a very easy way to perform the steps to:
-1.- Delete all the contents of the internal Hard Disk of the laptop where it is being executed
-2.- Restore one of the Labdoo Prepared images in one of our main Languages (ES,EN,DE,FR) if available in your connected USB Hard Drive
-3.- Set the hostname of the restored machine
-4.- If desired, automatically copy additional KIWIX contents if available in your connected USB Hard Drive
-For this to success, we wpill need to gather some information before all the automatization starts
-"
+printf "${red_colour}Welcome to the LABDOO shreding and restoring tool! \n${end_colour}"
 
+
+if "$UEFI_FLAG" ; then
+    echo "${red_colour}UEFI MODE ON-${end_colour} You are entering the UEFI Mode"
+else
+	echo "UEFI MODE OFF- You not running in the UEFI Mode"
+fi
 
 #PART 1 : Select disks
 
@@ -52,13 +86,10 @@ for i in "${!AVAILABLE_DISKS[@]}"
 do
 	echo "$i - ${AVAILABLE_DISKS[$i]}"
 done
-
 read -p "[ 0 / 1 / 2 / 3 ... ]
 ->  " ANSWER
-
 target_disk=$(echo ${AVAILABLE_DISKS[$ANSWER]} | awk -F':' '{print $1}')
 printf "${red_colour}SELECTED: $target_disk ${end_colour}\n"
-
 printf "\n-------------------------------------------------------------------------"
 printf "\n${yellow_colour}Select the PARTITION where you have stored the Labdoo IMAGES to restore${end_colour} \n"
 
@@ -72,7 +103,6 @@ read -p "[ 0 / 1 / 2 / 3 ... ]
 
 source_partition=$(echo ${AVAILABLE_PARTITIONS[$ANSWER]} | awk -F' ' '{print $1}')
 printf "${red_colour}SELECTED: $source_partition ${end_colour}\n"
-
 printf "\n-------------------------------------------------------------------------"
 printf "\n${yellow_colour}Select the PARTITION where you have stored the ADDITIONAL CONTENT ${end_colour} Or enter for not adding additional content at all\n"
 
@@ -121,8 +151,6 @@ for i in "${!AVAILABLE_IMGS[@]}"
 do
 	echo "$i - ${AVAILABLE_IMGS[$i]}"
 done
-
-
 read -p "[ 0 / 1 / 2 / 3 ... ]
 ->  " ANSWER
 
@@ -135,6 +163,25 @@ if [ ! -d "$IMAGEDIRTOINSTALL" ]; then
 ...Exiting...."
     exit 1
 fi
+
+
+
+if "$UEFI_FLAG" ; then
+	UEFI_IMG_DIR=($(find  /home/partimag -maxdepth 5 -type d -name "UEFI-Boot" ))
+	if [[ ! -z "$UEFI_IMG_DIR" ]]; then
+
+		echo "${red_colour}UEFI MODE -${end_colour} I have found the UEFI image under $UEFI_IMG_DIR"
+	else
+		echo "${red_colour}UEFI MODE -${end_colour} You selected UEFI Mode but now i cnnot find anyone, so I will break"
+		exit 1
+	fi
+
+fi
+
+
+
+
+
 
 ###
 # PART3: Ask Some additional questions (change hositid, skip shredding, what to do when finished)
@@ -169,11 +216,9 @@ printf "\n -------------------------------------------\n
  ${red_colour}YOU CAN INSTALL ADDITIONAL CONTENTS!! ${end_colour}
  Remember that you need to have the install_content_labdoo script properly configured and the contents to install stored in your SOURCE disk following an specific directory tree structure (please check the documentation if you have any doubt) \n "
 printf "\nSelect the languages you want the labdoo_install_content to install afterwards:
-Do not be afraid, if something was already installed, the script will skip it
-The disk will never get full (we leave a 10Gb free space)
 Indicate the comma separated values for the contents you want to install (empty if none)
 ${yellow_colour} Currently supported languages: [ES / EN / SW / AR / HI / DE / FR / NE / ID / PT / ZH / RU / RO / IT / FA] ${end_colour}
-Comma separated values will install multiple languages: ie: EN (English only) / SW,EN (Swahili+English) / ES,SW,EN (Spanish+Swahili+English)   ...ES,EN,SW,AR,HI,DE,FR,NE,ID,PT,ZH,RU,RO,IT,FA (all of them :) )"
+Comma separated values will install multiple languages: ie: EN (English only) / ES,SW,EN (Spanish+Swahili+English)   ...ES,EN,SW,AR,HI,DE,FR,NE,ID,PT,ZH,RU,RO,IT,FA (all of them :) )"
 
 read -p "[ EN / SW,EN / ES,FA,EN / ... ]
 ->  " languages_contents
@@ -209,15 +254,11 @@ read -p " Select [ 0 / 1 / 2 ]
 ###
 #Javier: Collect and show some info, to make the wait a bit shorter :)
 no_of_CPU_cores=`lscpu | grep -m 1 "CPU(s)" | awk -F ' ' '{print $2}'`
-
 CPU_freq_max_MHz=`lscpu | grep -m 1 "max MHz:" | awk -F ' ' '{print $4}' | awk -F ',' '{print $1}'`
-
 DISK_size_Gb=`lsblk -b --output SIZE -n -d $target_disk`
 DISK_size_Gb=$((DISK_size_Gb / 1000000000))
-
 MEM_size_Mb=`free mem | grep -m 1 "Mem:" | awk -F ' ' '{print $2}'`
 MEM_size_Mb=$((MEM_size_Mb / 1000))
-
 SERIAL_NUMBER=`dmidecode -s system-serial-number`
 
 
@@ -289,34 +330,80 @@ fi
 ###
 # PART6: RESTORE Redimension the partition table, check filesystem
 ###
-IMAGETOINSTALL=${IMAGEDIRTOINSTALL//\/home\/partimag\/}
 ocssr=$(which ocs-sr)
+IMAGETOINSTALL=${IMAGEDIRTOINSTALL//\/home\/partimag\/}
+UEFI_IMG=${UEFI_IMG_DIR//\/home\/partimag\/}
 
-$ocssr -g auto -e1 auto -e2 -batch -r -icds -scr -j2 -p true restoredisk "$IMAGETOINSTALL" ${target_disk//\/dev\/}
+if "$UEFI_FLAG" ; then
+  printf "${yellow_colour}UEFI 1/2 - Restoring UEFI image${end_colour}\n"
+  printf "${yellow_colour}ISSUING - ${end_colour} $ocssr -g auto -e1 auto -e2 -batch -r -icds -j2 -scr -p true restoredisk  $UEFI_IMG ${target_disk//\/dev\/}\n"
+  #read -p "Press Ctrl-C to exit or Enter to continue<-  " ANSWER
+  $ocssr -g auto -e1 auto -e2 -batch -r -icds -j2 -scr -p true restoredisk  $UEFI_IMG ${target_disk//\/dev\/}
+  echo "${red_colour}UEFI MODE -${end_colour} I have restored the UEFI image to get the partition table, now I will restore your image"
 
-rootuuid=$(blkid |grep ext4 |awk -F'\"' '{print $2}')
+  #Recreate sda2 larger
+  printf "${yellow_colour}UEFI  - Extending Filesystem${end_colour}\n"
+  #printf "${yellow_colour}ISSUING - ${end_colour} parted -s -a optimal $target_disk mkpart ext4 -- "$startpart" -0\n"
+  #read -p "Press Ctrl-C to exit or Enter to continue<-  " ANSWER
+  startpart=$(parted -s $target_disk print |grep ext4 |awk '{print $2}')
+  parted -s $target_disk rm 2
+
+  sgdisk $target_disk  -e
+  parted -s -a optimal $target_disk mkpart ext4 -- "$startpart" -0
+  #Fsck FS and resize
+  sleep 2
+  e2fsck -pf ${target_disk}2
+  sleep 2
+  resize2fs ${target_disk}2
 
 
-echo "rootuuid = $rootuuid"
-startpart=$(parted $target_disk print |grep ext4 |awk '{print $2}')
-parted -s $target_disk rm 1
 
-#Recreate sda1 larger and reset UUID and boot flag
-parted -s -a optimal $target_disk mkpart primary ext4 -- "$startpart" -0
-target_disk_1="${target_disk}1"
-tune2fs $target_disk_1 -U "$rootuuid"
-parted -s $target_disk set 1 boot on
 
-#Fsck FS and resize
-sleep 2
-e2fsck -pf $target_disk_1
-sleep 2
-resize2fs $target_disk_1
 
-#Write install.log
-mount $target_disk_1 /mnt
-cp /root/labdoo_install.log /mnt/root/labdoo_install.log
+  printf "${yellow_colour}UEFI 2/2 - Restoring OTHER image${end_colour}\n"
+  printf "${yellow_colour}ISSUING - ${end_colour} $ocssr  -e1 auto -e2 -batch -t -r -icds -j2 -k -scr -p true -f ${target_disk//\/dev\/}1 restoreparts "$IMAGETOINSTALL" ${target_disk//\/dev\/}2\n"
+  #read -p "Press Ctrl-C to exit or Enter to continue<-  " ANSWER
+  $ocssr  -e1 auto -e2 -batch -t -r -icds -j2 -k -scr -p true -f ${target_disk//\/dev\/}1 restoreparts "$IMAGETOINSTALL" ${target_disk//\/dev\/}2
+  echo "${red_colour}UEFI MODE -${end_colour} I have restored tthe definitive image"
 
+
+
+  rootuuid=$(blkid |grep ext4 |awk -F'\"' '{print $2}')
+
+  echo "Setting rootuuid in the boot partition to $rootuuid"
+  sudo mount ${target_disk}1 /mnt
+  sudo sed -i "s/search.fs_uuid.*/search.fs_uuid $rootuuid root hd0,gpt2/g"  /mnt/EFI/ubuntu/grub.cfg
+  sudo umount /mnt
+
+  sudo mount ${target_disk}2 /mnt
+
+
+else
+
+
+   $ocssr -g auto -e1 auto -e2 -batch -r -icds -scr -j2 -p true restoredisk "$IMAGETOINSTALL" ${target_disk//\/dev\/}
+   rootuuid=$(blkid |grep ext4 |awk -F'\"' '{print $2}')
+   echo "rootuuid = $rootuuid"
+   startpart=$(parted $target_disk print |grep ext4 |awk '{print $2}')
+   parted -s $target_disk rm 1
+
+   #Recreate sda1 larger and reset UUID and boot flag
+   parted -s -a optimal $target_disk mkpart primary ext4 -- "$startpart" -0
+   target_disk_1="${target_disk}1"
+   tune2fs $target_disk_1 -U "$rootuuid"
+   parted -s $target_disk set 1 boot on
+
+   #Fsck FS and resize
+   sleep 2
+   e2fsck -pf $target_disk_1
+   sleep 2
+   resize2fs $target_disk_1
+
+
+   mount $target_disk_1 /mnt
+
+
+fi
 
 
 
@@ -335,7 +422,7 @@ fi
 
 
 if [ "$remove_autostart" = "y" ]; then
-	printf "${xellow_colour}REMOVING autostart of Firefox and MSTeams as requested ${end_colour} \n"
+	printf "REMOVING autostart of Firefox and MSTeams as requested  \n"
 	rm /mnt/home/labdoo/.config/autostart/firefox.desktop
 	rm /mnt/home/labdoo/.config/autostart/teams.desktop
 	rm /mnt/home/student/.config/autostart/firefox.desktop
@@ -368,7 +455,7 @@ done
 
 
 umount /home/partimag
-printf "You can find the restored content under /mnt in case you want to check something... \n "
+printf "\nYou can find the restored content under /mnt in case you want to check something... \n "
 
 
 
