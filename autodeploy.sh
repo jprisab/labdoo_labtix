@@ -1,6 +1,6 @@
 #!/bin/bash
 cp -rf * /root/.
-umount -l $(findmnt -T . -o TARGET | grep "/")
+for i in $(findmnt  -lo target | grep "/media/"); do echo "Unmounting - $i"; sudo umount -l $i; done
 umount -l /mnt
 cd /root/
 bash labdoo_sanitize_main.sh $1
